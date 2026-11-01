@@ -21,8 +21,10 @@ jobs:
         run: |
           F=$(find project -name PageView.kt | head -n 1)
           echo "Found: $F"
-          sed -i 's/\.matchParentSize()/.fillMaxSize()/g' "$F"
+          sed -i 's/matchParentSize/fillMaxSize/g' "$F"
           grep -q "layout.fillMaxSize" "$F" || sed -i '0,/^import /s//import androidx.compose.foundation.layout.fillMaxSize\nimport /' "$F"
+          echo "---- PageView.kt ----"
+          cat "$F"
 
       - uses: actions/setup-java@v4
         with:
