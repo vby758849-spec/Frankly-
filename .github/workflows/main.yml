@@ -13,10 +13,16 @@ jobs:
 
       - name: Unzip project
         run: |
-          ls
-          unzip -q "$(ls *.zip | head -n 1)" -d project
-          DIR=$(dirname "$(find project -name settings.gradle.kts | head -n 1)")
-          echo "PROJECT_DIR=$DIR" >> $GITHUB_ENV
+          ZIP=$(find . -maxdepth 1 -iname "*.zip" | head -n 1)
+          echo "Zip: $ZIP"
+          unzip -q "$ZIP" -d project
+
+      - name: Fix PageView
+        run: |
+          F=$(find project -name PageView.kt | head -n 1)
+          echo "Found: $F"
+          sed -i 's/\.matchParentSize()/.fillMaxSize()/g' "$F"
+          grep -q "layout.fillMaxSize" "$F" || sed -i '0,/^import /s//import androidx.compose.foundation.layout.fillMaxSize\nimport /' "$F"
 
       - uses: actions/setup-java@v4
         with:
@@ -24,13 +30,19 @@ jobs:
           java-version: 17
 
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.9
 
       - name: Build debug APK
-        run: cd "$PROJECT_DIR" && gradle assembleDebug
+        run: |
+          DIR=$(dirname "$(find project -name settings.gradle* | head -n 1)")
+          cd "$DIR"
+          if [ -f ./gradlew ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          else
+            gradle assembleDebug
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Frankly-debug-apk
-          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/*.apk
+          name: app-debug
+          path: project/**/*.apk
