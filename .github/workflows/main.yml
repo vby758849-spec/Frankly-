@@ -20,11 +20,19 @@ jobs:
       - name: Fix PageView
         run: |
           F=$(find project -name PageView.kt | head -n 1)
-          echo "Found: $F"
           sed -i 's/matchParentSize/fillMaxSize/g' "$F"
           grep -q "layout.fillMaxSize" "$F" || sed -i '0,/^import /s//import androidx.compose.foundation.layout.fillMaxSize\nimport /' "$F"
-          echo "---- PageView.kt ----"
-          cat "$F"
+
+      - name: Show files
+        run: |
+          echo "==== PageView.kt ===="
+          cat "$(find project -name PageView.kt | head -n 1)"
+          echo "==== strings.xml ===="
+          find project -name strings.xml -exec cat {} \;
+          echo "==== Text in code ===="
+          grep -rhn 'Text(' --include=*.kt project | head -60
+          echo "==== PageView calls ===="
+          grep -rn 'PageView(' --include=*.kt project
 
       - uses: actions/setup-java@v4
         with:
